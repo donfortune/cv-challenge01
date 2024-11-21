@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  backend:
+    image: donfortune1/dojo-backend:1.6
+    container_name: backend
+    env_file:
+      - backend/.env
+    ports:
+      - "8000:8000"
+    networks:
+      - app_network
+
+  frontend:
+    image: donfortune1/dojo-frontend:1.5  
+    container_name: frontend
+    ports:
+      - "3000:80"
+    networks:
+      - app_network
+    environment:
+      # - VITE_API_URL=http://backend:8000
+      - VITE_API_URL=http://0.0.0.0:8000
+
+networks:
+  app_network:
+    driver: bridge
