@@ -5,23 +5,72 @@ services:
     image: donfortune1/dojo-backend:1.6
     container_name: backend
     env_file:
-      - backend/.env
+      - /Users/mac/cv-challenge01/backend/.env
     ports:
       - "8000:8000"
     networks:
       - app_network
 
   frontend:
-    image: donfortune1/dojo-frontend:1.5  
+    image: donfortune1/dojo-frontend:2.5  
     container_name: frontend
-    ports:
-      - "3000:80"
     networks:
       - app_network
+    # If you are using environment variables during the build process, set them here
+    env_file:
+      - /Users/mac/cv-challenge01/frontend/.env
+    # environment:
+    #   - VITE_API_URL=http://backend:8000
+
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    ports:
+      - "8080:8080" # Adminer accessible on localhost:8080
+    networks:
+      - app_network
+    depends_on:
+      - backend # Ensures backend starts before Adminer
+
+  nginx_proxy_manager:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: nginx_proxy_manager
+    ports:
+      - "80:80"        # Public HTTP
+      - "443:443"      # Public HTTPS
+      - "81:81"        # Web UI
     environment:
-      # - VITE_API_URL=http://backend:8000
-      - VITE_API_URL=http://0.0.0.0:8000
+      DB_SQLITE_FILE: "/data/database.sqlite"
+    volumes:
+      - ./nginx-proxy-data:/data
+      - ./nginx-letsencrypt:/etc/letsencrypt
+    depends_on:
+      - backend
+      - frontend
+      - adminer
+    networks:
+      - app_network
+  
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: reverse_proxy
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf   # Nginx configuration file
+  #   networks:
+  #     - app_network
+  #   depends_on:
+  #     - frontend
+  #     - backend
 
 networks:
   app_network:
     driver: bridge
+
+
+volumes:
+  db_data:
+  nginx-proxy-data:
+  nginx-letsencrypt:
